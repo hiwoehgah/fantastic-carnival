@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +38,8 @@ import okhttp3.Response;
 
 public class ChooseAreaFragment extends Fragment {
 
+    private static final String TAG = "ChooseAreaFragment";
+
     public static final int LEVEL_PROVINCE = 0;
     public static final int LEVEL_CITY = 1;
     public static final int LEVEL_COUNTRY = 2;
@@ -59,6 +62,7 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        Log.i(TAG, "onCreateView: ");
         View view = inflater.inflate(R.layout.choose_area, container, false);
         title = view.findViewById(R.id.text_title);
         backBtn = view.findViewById(R.id.btn_back_chooseArea);
@@ -83,10 +87,17 @@ public class ChooseAreaFragment extends Fragment {
                     queryCountries();
                 } else if (currentLevel == LEVEL_COUNTRY) {
                     String weatherId = countryList.get(i).getWeatherId();
-                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                    intent.putExtra("weather_id", weatherId);
-                    startActivity(intent);
-                    getActivity().finish();
+                    if (getActivity() instanceof MainActivity) {
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                        intent.putExtra("weather_id", weatherId);
+                        startActivity(intent);
+                        getActivity().finish();
+                    } else if (getActivity() instanceof WeatherActivity) {
+                        WeatherActivity weatherActivity = (WeatherActivity) getActivity();
+                        weatherActivity.drawerLayout.closeDrawers();
+                        weatherActivity.swipeRefreshLayout.setRefreshing(true);
+                        weatherActivity.requestWeather(weatherId);
+                    }
                 }
             }
         });
@@ -122,11 +133,11 @@ public class ChooseAreaFragment extends Fragment {
     }
 
     private void queryCities() {
-        title.setText(selectedProvince.getProvinceName());
-        backBtn.setVisibility(View.VISIBLE);
         cityList = DataSupport.where("provinceId = ?", String.valueOf(selectedProvince.getId()))
                 .find(City.class);
         if (cityList.size() > 0) {
+            title.setText(selectedProvince.getProvinceName());
+            backBtn.setVisibility(View.VISIBLE);
             dataList.clear();
             for (City city : cityList) {
                 dataList.add(city.getCityName());
@@ -142,11 +153,11 @@ public class ChooseAreaFragment extends Fragment {
     }
 
     private void queryCountries() {
-        title.setText(selectedCity.getCityName());
         backBtn.setVisibility(View.VISIBLE);
         countryList = DataSupport.where("cityId = ?", String.valueOf(selectedCity.getId()))
                 .find(Country.class);
         if (countryList.size() > 0) {
+            title.setText(selectedCity.getCityName());
             dataList.clear();
             for (Country country : countryList) {
                 dataList.add(country.getCountryName());
@@ -220,5 +231,41 @@ public class ChooseAreaFragment extends Fragment {
         if (progressDialog != null) {
             progressDialog.dismiss();
         }
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        Log.i(TAG, "onViewStateRestored: ");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.i(TAG, "onStart: ");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume: ");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.i(TAG, "onPause: ");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.i(TAG, "onStop: ");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.i(TAG, "onDestroyView: ");
     }
 }
